@@ -72,7 +72,7 @@ router.get('/current', isLoggedOrGuest, withHttpClient, async (req, res) => {
   const { client } = req as SpotifyRequest;
 
   try {
-    const me = await client.me();
+    const me = await client.currentPlay();
     res.status(200).send(me);
   } catch (e) {
     logger.error(e);
