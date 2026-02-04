@@ -50,7 +50,6 @@ jobs:
           labels: ${{ steps.docker-meta.outputs.labels }}
           tags: |
             ghcr.io/noeulnight/sspotify_client:latest
-            ghcr.io/noeulnight/sspotify_client:${{ steps.tag.outputs.tag }}
 
       - name: Build and push server release
         uses: docker/build-push-action@v5
@@ -62,4 +61,3 @@ jobs:
           labels: ${{ steps.docker-meta.outputs.labels }}
           tags: |
             ghcr.io/noeulnight/sspotify_server:latest
-            ghcr.io/noeulnight/sspotify_server:${{ steps.tag.outputs.tag }}
