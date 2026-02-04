@@ -1,6 +1,6 @@
-import { Timesplit } from "../../tools/types";
-import { InfosModel } from "../Models";
-import { User } from "../schemas/user";
+import { Timesplit } from '../../tools/types';
+import { InfosModel } from '../Models';
+import { User } from '../schemas/user';
 import {
   basicMatch,
   getGroupByDateProjection,
@@ -11,7 +11,7 @@ import {
   lightArtistLookupPipeline,
   lightTrackLookupPipeline,
   sortByTimeSplit,
-} from "./statsTools";
+} from './statsTools';
 
 export type ItemType = {
   field: string;
@@ -20,16 +20,16 @@ export type ItemType = {
 
 export const ItemType = {
   track: {
-    field: "$id",
-    collection: "tracks",
+    field: '$id',
+    collection: 'tracks',
   },
   album: {
-    field: "$albumId",
-    collection: "albums",
+    field: '$albumId',
+    collection: 'albums',
   },
   artist: {
-    field: "$primaryArtistId",
-    collection: "artists",
+    field: '$primaryArtistId',
+    collection: 'artists',
   },
 } as const satisfies Record<string, ItemType>;
 
@@ -47,52 +47,52 @@ export const getMostListenedSongs = async (
 
     {
       $group: {
-        _id: { ...getGroupingByTimeSplit(timeSplit), track: "$id" },
+        _id: { ...getGroupingByTimeSplit(timeSplit), track: '$id' },
         count: { $sum: 1 },
       },
     },
-    { $sort: { count: -1, "_id.track": 1 } },
+    { $sort: { count: -1, '_id.track': 1 } },
     {
       $group: {
-        _id: getGroupingByTimeSplit(timeSplit, "_id"),
-        tracks: { $push: "$_id.track" },
-        counts: { $push: "$count" },
+        _id: getGroupingByTimeSplit(timeSplit, '_id'),
+        tracks: { $push: '$_id.track' },
+        counts: { $push: '$count' },
       },
     },
     {
       $project: {
         _id: 1,
-        tracks: { $slice: ["$tracks", user.settings.nbElements] },
-        counts: { $slice: ["$counts", user.settings.nbElements] },
+        tracks: { $slice: ['$tracks', user.settings.nbElements] },
+        counts: { $slice: ['$counts', user.settings.nbElements] },
       },
     },
-    { $unwind: { path: "$tracks", includeArrayIndex: "trackIdx" } },
+    { $unwind: { path: '$tracks', includeArrayIndex: 'trackIdx' } },
     {
       $lookup: {
-        from: "tracks",
-        localField: "tracks",
-        foreignField: "id",
-        as: "tracks",
+        from: 'tracks',
+        localField: 'tracks',
+        foreignField: 'id',
+        as: 'tracks',
       },
     },
-    { $unwind: "$tracks" },
+    { $unwind: '$tracks' },
     {
       $lookup: {
-        from: "albums",
-        localField: "tracks.album",
-        foreignField: "id",
-        as: "tracks.album",
+        from: 'albums',
+        localField: 'tracks.album',
+        foreignField: 'id',
+        as: 'tracks.album',
       },
     },
-    { $unwind: "$tracks.album" },
+    { $unwind: '$tracks.album' },
     {
       $group: {
-        _id: getGroupingByTimeSplit(timeSplit, "_id"),
-        tracks: { $push: "$tracks" },
-        counts: { $push: { $arrayElemAt: ["$counts", "$trackIdx"] } },
+        _id: getGroupingByTimeSplit(timeSplit, '_id'),
+        tracks: { $push: '$tracks' },
+        counts: { $push: { $arrayElemAt: ['$counts', '$trackIdx'] } },
       },
     },
-    ...sortByTimeSplit(timeSplit, "_id"),
+    ...sortByTimeSplit(timeSplit, '_id'),
   ]);
   return res;
 };
@@ -117,44 +117,44 @@ export const getMostListenedArtist = async (
       $group: {
         _id: {
           ...getGroupingByTimeSplit(timeSplit),
-          artistId: "$primaryArtistId",
+          artistId: '$primaryArtistId',
         },
-        count: { $sum: getTrackSumType(user, "$durationMs") },
+        count: { $sum: getTrackSumType(user, '$durationMs') },
       },
     },
-    { $sort: { count: -1, "_id.artistId": 1 } },
+    { $sort: { count: -1, '_id.artistId': 1 } },
     {
       $group: {
-        _id: getGroupingByTimeSplit(timeSplit, "_id"),
-        artists: { $push: "$_id.artistId" },
-        counts: { $push: "$count" },
+        _id: getGroupingByTimeSplit(timeSplit, '_id'),
+        artists: { $push: '$_id.artistId' },
+        counts: { $push: '$count' },
       },
     },
     {
       $project: {
         _id: 1,
-        artists: { $slice: ["$artists", user.settings.nbElements] },
-        counts: { $slice: ["$counts", user.settings.nbElements] },
+        artists: { $slice: ['$artists', user.settings.nbElements] },
+        counts: { $slice: ['$counts', user.settings.nbElements] },
       },
     },
-    { $unwind: { path: "$artists", includeArrayIndex: "artIdx" } },
+    { $unwind: { path: '$artists', includeArrayIndex: 'artIdx' } },
     {
       $lookup: {
-        from: "artists",
-        localField: "artists",
-        foreignField: "id",
-        as: "artists",
+        from: 'artists',
+        localField: 'artists',
+        foreignField: 'id',
+        as: 'artists',
       },
     },
-    { $unwind: "$artists" },
+    { $unwind: '$artists' },
     {
       $group: {
-        _id: getGroupingByTimeSplit(timeSplit, "_id"),
-        artists: { $push: "$artists" },
-        counts: { $push: { $arrayElemAt: ["$counts", "$artIdx"] } },
+        _id: getGroupingByTimeSplit(timeSplit, '_id'),
+        artists: { $push: '$artists' },
+        counts: { $push: { $arrayElemAt: ['$counts', '$artIdx'] } },
       },
     },
-    ...sortByTimeSplit(timeSplit, "_id"),
+    ...sortByTimeSplit(timeSplit, '_id'),
   ]);
   return res;
 };
@@ -177,18 +177,18 @@ export const getSongsPer = async (
       $group: {
         _id: getGroupingByTimeSplit(timeSplit),
         count: { $sum: 1 },
-        differents: { $addToSet: "$id" },
+        differents: { $addToSet: '$id' },
       },
     },
-    { $unwind: "$differents" },
+    { $unwind: '$differents' },
     {
       $group: {
-        _id: "$_id",
-        count: { $first: "$count" },
+        _id: '$_id',
+        count: { $first: '$count' },
         differents: { $sum: 1 },
       },
     },
-    ...sortByTimeSplit(timeSplit, "_id"),
+    ...sortByTimeSplit(timeSplit, '_id'),
   ]);
   return res;
 };
@@ -211,10 +211,10 @@ export const getTimePer = async (
     {
       $group: {
         _id: getGroupingByTimeSplit(timeSplit),
-        count: { $sum: "$durationMs" },
+        count: { $sum: '$durationMs' },
       },
     },
-    ...sortByTimeSplit(timeSplit, "_id"),
+    ...sortByTimeSplit(timeSplit, '_id'),
   ]);
   return res;
 };
@@ -235,29 +235,29 @@ export const albumDateRatio = async (
     },
     {
       $lookup: {
-        from: "tracks",
-        localField: "id",
-        foreignField: "id",
-        as: "track",
+        from: 'tracks',
+        localField: 'id',
+        foreignField: 'id',
+        as: 'track',
       },
     },
-    { $unwind: "$track" },
+    { $unwind: '$track' },
     {
       $lookup: {
-        from: "albums",
-        localField: "track.album",
-        foreignField: "id",
-        as: "album",
+        from: 'albums',
+        localField: 'track.album',
+        foreignField: 'id',
+        as: 'album',
       },
     },
-    { $unwind: "$album" },
+    { $unwind: '$album' },
     {
       $group: {
         _id: getGroupingByTimeSplit(timeSplit),
         totalYear: {
           $sum: {
             $toInt: {
-              $arrayElemAt: [{ $split: ["$album.release_date", "-"] }, 0],
+              $arrayElemAt: [{ $split: ['$album.release_date', '-'] }, 0],
             },
           },
         },
@@ -267,11 +267,11 @@ export const albumDateRatio = async (
     {
       $project: {
         _id: 1,
-        totalYear: { $divide: ["$totalYear", "$count"] },
+        totalYear: { $divide: ['$totalYear', '$count'] },
         count: 1,
       },
     },
-    ...sortByTimeSplit(timeSplit, "_id"),
+    ...sortByTimeSplit(timeSplit, '_id'),
   ]);
 
   return res;
@@ -293,20 +293,20 @@ export const featRatio = async (
     },
     {
       $lookup: {
-        from: "tracks",
-        localField: "id",
-        foreignField: "id",
-        as: "track",
+        from: 'tracks',
+        localField: 'id',
+        foreignField: 'id',
+        as: 'track',
       },
     },
-    { $unwind: "$track" },
+    { $unwind: '$track' },
     {
       $group: {
         _id: getGroupingByTimeSplit(timeSplit),
         1: {
           $sum: {
             $cond: {
-              if: { $eq: [{ $size: "$track.artists" }, 1] },
+              if: { $eq: [{ $size: '$track.artists' }, 1] },
               then: 1,
               else: 0,
             },
@@ -315,7 +315,7 @@ export const featRatio = async (
         2: {
           $sum: {
             $cond: {
-              if: { $eq: [{ $size: "$track.artists" }, 2] },
+              if: { $eq: [{ $size: '$track.artists' }, 2] },
               then: 1,
               else: 0,
             },
@@ -324,7 +324,7 @@ export const featRatio = async (
         3: {
           $sum: {
             $cond: {
-              if: { $eq: [{ $size: "$track.artists" }, 3] },
+              if: { $eq: [{ $size: '$track.artists' }, 3] },
               then: 1,
               else: 0,
             },
@@ -333,7 +333,7 @@ export const featRatio = async (
         4: {
           $sum: {
             $cond: {
-              if: { $eq: [{ $size: "$track.artists" }, 4] },
+              if: { $eq: [{ $size: '$track.artists' }, 4] },
               then: 1,
               else: 0,
             },
@@ -342,13 +342,13 @@ export const featRatio = async (
         5: {
           $sum: {
             $cond: {
-              if: { $eq: [{ $size: "$track.artists" }, 5] },
+              if: { $eq: [{ $size: '$track.artists' }, 5] },
               then: 1,
               else: 0,
             },
           },
         },
-        totalPeople: { $sum: { $size: "$track.artists" } },
+        totalPeople: { $sum: { $size: '$track.artists' } },
         count: { $sum: 1 },
       },
     },
@@ -362,10 +362,10 @@ export const featRatio = async (
         5: 1,
         count: 1,
         totalPeople: 1,
-        average: { $divide: ["$totalPeople", "$count"] },
+        average: { $divide: ['$totalPeople', '$count'] },
       },
     },
-    ...sortByTimeSplit(timeSplit, "_id"),
+    ...sortByTimeSplit(timeSplit, '_id'),
   ]);
   return res;
 };
@@ -386,28 +386,28 @@ export const popularityPer = async (
     },
     {
       $lookup: {
-        from: "tracks",
-        localField: "id",
-        foreignField: "id",
-        as: "track",
+        from: 'tracks',
+        localField: 'id',
+        foreignField: 'id',
+        as: 'track',
       },
     },
-    { $unwind: "$track" },
+    { $unwind: '$track' },
     {
       $group: {
         _id: getGroupingByTimeSplit(timeSplit),
-        totalPopularity: { $sum: "$track.popularity" },
+        totalPopularity: { $sum: '$track.popularity' },
         count: { $sum: 1 },
       },
     },
     {
       $project: {
         _id: 1,
-        totalPopularity: { $divide: ["$totalPopularity", "$count"] },
+        totalPopularity: { $divide: ['$totalPopularity', '$count'] },
         count: 1,
       },
     },
-    ...sortByTimeSplit(timeSplit, "_id"),
+    ...sortByTimeSplit(timeSplit, '_id'),
   ]);
   return res;
 };
@@ -437,25 +437,25 @@ export const differentArtistsPer = async (
         count: { $sum: 1 },
       },
     },
-    { $sort: { count: -1, "_id.artistId": 1 } },
+    { $sort: { count: -1, '_id.artistId': 1 } },
     {
       $lookup: {
-        from: "artists",
-        localField: "_id.artistId",
-        foreignField: "id",
-        as: "artist",
+        from: 'artists',
+        localField: '_id.artistId',
+        foreignField: 'id',
+        as: 'artist',
       },
     },
-    { $unwind: "$artist" },
+    { $unwind: '$artist' },
     {
       $group: {
-        _id: getGroupingByTimeSplit(timeSplit, "_id"),
-        artists: { $push: "$artist" },
+        _id: getGroupingByTimeSplit(timeSplit, '_id'),
+        artists: { $push: '$artist' },
         differents: { $sum: 1 },
-        counts: { $push: "$count" },
+        counts: { $push: '$count' },
       },
     },
-    ...sortByTimeSplit(timeSplit, "_id"),
+    ...sortByTimeSplit(timeSplit, '_id'),
   ]);
 
   return res;
@@ -473,8 +473,8 @@ export const getDayRepartition = async (user: User, start: Date, end: Date) => {
     },
     {
       $group: {
-        _id: "$hour",
-        count: { $sum: getTrackSumType(user, "$durationMs") },
+        _id: '$hour',
+        count: { $sum: getTrackSumType(user, '$durationMs') },
       },
     },
     { $sort: { _id: 1 } },
@@ -495,55 +495,55 @@ export const getBestArtistsPer = async (
     },
     {
       $lookup: {
-        from: "tracks",
-        localField: "id",
-        foreignField: "id",
-        as: "track",
+        from: 'tracks',
+        localField: 'id',
+        foreignField: 'id',
+        as: 'track',
       },
     },
-    { $unwind: "$track" },
+    { $unwind: '$track' },
     {
       $group: {
         _id: {
           ...getGroupingByTimeSplit(timeSplit),
-          art: { $arrayElemAt: ["$track.artists", 0] },
+          art: { $arrayElemAt: ['$track.artists', 0] },
         },
         count: { $sum: getTrackSumType(user) },
       },
     },
-    { $sort: { count: -1, "_id.art": 1 } },
+    { $sort: { count: -1, '_id.art': 1 } },
     {
       $group: {
-        _id: getGroupingByTimeSplit(timeSplit, "_id"),
-        artists: { $push: "$_id.art" },
-        counts: { $push: "$count" },
+        _id: getGroupingByTimeSplit(timeSplit, '_id'),
+        artists: { $push: '$_id.art' },
+        counts: { $push: '$count' },
       },
     },
     {
       $project: {
         _id: 1,
-        artists: { $slice: ["$artists", user.settings.nbElements] },
-        counts: { $slice: ["$counts", user.settings.nbElements] },
+        artists: { $slice: ['$artists', user.settings.nbElements] },
+        counts: { $slice: ['$counts', user.settings.nbElements] },
       },
     },
-    { $unwind: { path: "$artists", includeArrayIndex: "artIdx" } },
+    { $unwind: { path: '$artists', includeArrayIndex: 'artIdx' } },
     {
       $lookup: {
-        from: "artists",
-        localField: "artists",
-        foreignField: "id",
-        as: "artists",
+        from: 'artists',
+        localField: 'artists',
+        foreignField: 'id',
+        as: 'artists',
       },
     },
-    { $unwind: "$artists" },
+    { $unwind: '$artists' },
     {
       $group: {
-        _id: getGroupingByTimeSplit(timeSplit, "_id"),
-        artists: { $push: "$artists" },
-        counts: { $push: { $arrayElemAt: ["$counts", "$artIdx"] } },
+        _id: getGroupingByTimeSplit(timeSplit, '_id'),
+        artists: { $push: '$artists' },
+        counts: { $push: { $arrayElemAt: ['$counts', '$artIdx'] } },
       },
     },
-    ...sortByTimeSplit(timeSplit, "_id"),
+    ...sortByTimeSplit(timeSplit, '_id'),
   ]);
   return res;
 };
@@ -561,15 +561,15 @@ export const getBest = (
     {
       $group: {
         _id: itemType.field,
-        duration_ms: { $sum: "$durationMs" },
+        duration_ms: { $sum: '$durationMs' },
         count: { $sum: 1 },
-        trackId: { $first: "$id" },
-        albumId: { $first: "$albumId" },
-        primaryArtistId: { $first: "$primaryArtistId" },
-        trackIds: { $addToSet: "$id" },
+        trackId: { $first: '$id' },
+        albumId: { $first: '$albumId' },
+        primaryArtistId: { $first: '$primaryArtistId' },
+        trackIds: { $addToSet: '$id' },
       },
     },
-    { $addFields: { differents: { $size: "$trackIds" } } },
+    { $addFields: { differents: { $size: '$trackIds' } } },
     {
       $facet: {
         infos: [
@@ -581,36 +581,36 @@ export const getBest = (
           {
             $group: {
               _id: null,
-              total_duration_ms: { $sum: "$duration_ms" },
-              total_count: { $sum: "$count" },
+              total_duration_ms: { $sum: '$duration_ms' },
+              total_count: { $sum: '$count' },
             },
           },
         ],
       },
     },
-    { $unwind: "$infos" },
-    { $unwind: "$computations" },
+    { $unwind: '$infos' },
+    { $unwind: '$computations' },
     {
       $project: {
-        _id: "$infos._id",
+        _id: '$infos._id',
         result: {
-          $mergeObjects: ["$infos", "$computations"],
+          $mergeObjects: ['$infos', '$computations'],
         },
       },
     },
     {
       $replaceRoot: {
         newRoot: {
-          $mergeObjects: ["$result", { _id: "$_id" }],
+          $mergeObjects: ['$result', { _id: '$_id' }],
         },
       },
     },
-    { $lookup: lightTrackLookupPipeline("trackId") },
-    { $unwind: "$track" },
-    { $lookup: lightAlbumLookupPipeline("albumId") },
-    { $unwind: "$album" },
-    { $lookup: lightArtistLookupPipeline("primaryArtistId", false) },
-    { $unwind: "$artist" },
+    { $lookup: lightTrackLookupPipeline('trackId') },
+    { $unwind: '$track' },
+    { $lookup: lightAlbumLookupPipeline('albumId') },
+    { $unwind: '$album' },
+    { $lookup: lightArtistLookupPipeline('primaryArtistId', false) },
+    { $unwind: '$artist' },
   ]);
 
 export const getBestOfHour = async (
@@ -633,26 +633,26 @@ export const getBestOfHour = async (
     { $sort: { total: -1 } },
     {
       $group: {
-        _id: "$_id.hour",
+        _id: '$_id.hour',
         items: {
-          $push: { itemId: "$_id.itemId", total: "$total" },
+          $push: { itemId: '$_id.itemId', total: '$total' },
         },
-        total: { $sum: "$total" },
+        total: { $sum: '$total' },
       },
     },
     {
       $project: {
-        hour: "$_id",
-        total: "$total",
-        items: { $slice: ["$items", 20] },
+        hour: '$_id',
+        total: '$total',
+        items: { $slice: ['$items', 20] },
       },
     },
     {
       $lookup: {
         from: itemType.collection,
-        localField: "items.itemId",
-        foreignField: "id",
-        as: "full_items",
+        localField: 'items.itemId',
+        foreignField: 'id',
+        as: 'full_items',
       },
     },
     { $sort: { _id: 1 } },
@@ -673,12 +673,12 @@ export const getLongestListeningSession = async (
   const sessionBreakThreshold = 10 * 60 * 1000;
   const subtract = {
     $cond: [
-      "$$value.last",
+      '$$value.last',
       {
         $subtract: [
-          "$$this.played_at",
+          '$$this.played_at',
           {
-            $add: ["$$value.last.played_at", "$$value.last.durationMs"],
+            $add: ['$$value.last.played_at', '$$value.last.durationMs'],
           },
         ],
       },
@@ -686,33 +686,33 @@ export const getLongestListeningSession = async (
     ],
   };
 
-  const item = { subtract, info: "$$this" };
+  const item = { subtract, info: '$$this' };
 
   const longestSessions = await InfosModel.aggregate([
     ...basicMatch(userId, start, end),
     { $sort: { played_at: 1 } },
     {
       $group: {
-        _id: "$owner",
-        infos: { $push: "$$ROOT" },
+        _id: '$owner',
+        infos: { $push: '$$ROOT' },
       },
     },
     {
       $addFields: {
         distanceToLast: {
           $reduce: {
-            input: "$infos",
+            input: '$infos',
             initialValue: { distance: [], current: [] },
             in: {
               distance: {
                 $concatArrays: [
-                  "$$value.distance",
+                  '$$value.distance',
                   {
                     $cond: {
                       if: {
                         $gt: [subtract, sessionBreakThreshold],
                       },
-                      then: ["$$value.current"],
+                      then: ['$$value.current'],
                       else: [],
                     },
                   },
@@ -725,39 +725,39 @@ export const getLongestListeningSession = async (
                   },
                   then: [item],
                   else: {
-                    $concatArrays: ["$$value.current", [item]],
+                    $concatArrays: ['$$value.current', [item]],
                   },
                 },
               },
-              last: "$$this",
+              last: '$$this',
             },
           },
         },
       },
     },
-    { $unset: ["infos", "distanceToLast.last"] },
+    { $unset: ['infos', 'distanceToLast.last'] },
     {
       $addFields: {
-        "distanceToLast.distance": {
+        'distanceToLast.distance': {
           $concatArrays: [
-            "$distanceToLast.distance",
-            ["$distanceToLast.current"],
+            '$distanceToLast.distance',
+            ['$distanceToLast.current'],
           ],
         },
       },
     },
-    { $unset: "distanceToLast.current" },
+    { $unset: 'distanceToLast.current' },
     {
       $unwind: {
-        path: "$distanceToLast.distance",
+        path: '$distanceToLast.distance',
       },
     },
     {
       $addFields: {
         sessionLength: {
           $subtract: [
-            { $last: "$distanceToLast.distance.info.played_at" },
-            { $first: "$distanceToLast.distance.info.played_at" },
+            { $last: '$distanceToLast.distance.info.played_at' },
+            { $first: '$distanceToLast.distance.info.played_at' },
           ],
         },
       },
@@ -766,10 +766,10 @@ export const getLongestListeningSession = async (
     { $limit: 5 },
     {
       $lookup: {
-        from: "tracks",
-        localField: "distanceToLast.distance.info.id",
-        foreignField: "id",
-        as: "full_tracks",
+        from: 'tracks',
+        localField: 'distanceToLast.distance.info.id',
+        foreignField: 'id',
+        as: 'full_tracks',
       },
     },
   ]);
@@ -792,10 +792,10 @@ export const getRankOf = async (
     { $match: { owner: user._id } },
     { $group: { _id: itemType.field, count: { $sum: 1 } } },
     { $sort: { count: -1, _id: 1 } },
-    { $group: { _id: 1, array: { $push: { id: "$_id", count: "$count" } } } },
+    { $group: { _id: 1, array: { $push: { id: '$_id', count: '$count' } } } },
     {
       $project: {
-        index: { $indexOfArray: ["$array.id", itemId] },
+        index: { $indexOfArray: ['$array.id', itemId] },
         array: 1,
       },
     },
@@ -803,17 +803,17 @@ export const getRankOf = async (
       $project: {
         index: 1,
         isMax: {
-          $cond: { if: { $eq: ["$index", 0] }, then: true, else: false },
+          $cond: { if: { $eq: ['$index', 0] }, then: true, else: false },
         },
         isMin: {
           $cond: {
-            if: { $eq: ["$index", { $subtract: [{ $size: "$array" }, 1] }] },
+            if: { $eq: ['$index', { $subtract: [{ $size: '$array' }, 1] }] },
             then: true,
             else: false,
           },
         },
         results: {
-          $slice: ["$array", { $max: [{ $subtract: ["$index", 1] }, 0] }, 3],
+          $slice: ['$array', { $max: [{ $subtract: ['$index', 1] }, 0] }, 3],
         },
       },
     },

@@ -1,5 +1,5 @@
-import { Router } from "express";
-import { z } from "zod";
+import { Router } from 'express';
+import { z } from 'zod';
 import {
   getTrackBySpotifyId,
   getSongs,
@@ -19,25 +19,25 @@ import {
   getBestOfHour,
   getMostListenedSongOfArtist,
   getArtists,
-} from "../database";
+} from '../database';
 import {
   CollaborativeMode,
   getCollaborativeBestAlbums,
   getCollaborativeBestArtists,
   getCollaborativeBestSongs,
-} from "../database/queries/collaborative";
-import { DateFormatter, intervalToDisplay } from "../tools/date";
-import { logger } from "../tools/logger";
+} from '../database/queries/collaborative';
+import { DateFormatter, intervalToDisplay } from '../tools/date';
+import { logger } from '../tools/logger';
 import {
   affinityAllowed,
   isLoggedOrGuest,
   logged,
   validate,
   withHttpClient,
-} from "../tools/middleware";
-import { SpotifyRequest, LoggedRequest, Timesplit } from "../tools/types";
-import { toDate, toNumber } from "../tools/zod";
-import { uniq } from "../tools/misc";
+} from '../tools/middleware';
+import { SpotifyRequest, LoggedRequest, Timesplit } from '../tools/types';
+import { toDate, toNumber } from '../tools/zod';
+import { uniq } from '../tools/misc';
 
 export const router = Router();
 
@@ -45,7 +45,7 @@ const playSchema = z.object({
   id: z.string(),
 });
 
-router.post("/play", logged, withHttpClient, async (req, res) => {
+router.post('/play', logged, withHttpClient, async (req, res) => {
   const { client } = req as SpotifyRequest;
   const { id } = validate(req.body, playSchema);
 
@@ -68,6 +68,18 @@ router.post("/play", logged, withHttpClient, async (req, res) => {
   }
 });
 
+router.get('/current', isLoggedOrGuest, withHttpClient, async (req, res) => {
+  const { client } = req as SpotifyRequest;
+
+  try {
+    const me = await client.me();
+    res.status(200).send(me);
+  } catch (e) {
+    logger.error(e);
+    res.status(500).send({ code: 'SPOTIFY_ERROR' });
+  }
+});
+
 const gethistorySchema = z.object({
   number: z.preprocess(toNumber, z.number().max(20)),
   offset: z.preprocess(toNumber, z.number()),
@@ -75,7 +87,7 @@ const gethistorySchema = z.object({
   end: z.preprocess(toDate, z.date().optional()),
 });
 
-router.get("/gethistory", isLoggedOrGuest, async (req, res) => {
+router.get('/gethistory', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { number, offset, start, end } = validate(req.query, gethistorySchema);
 
@@ -105,7 +117,7 @@ const intervalPerSchema = z.object({
   timeSplit: z.nativeEnum(Timesplit).default(Timesplit.day),
 });
 
-router.get("/listened_to", isLoggedOrGuest, async (req, res) => {
+router.get('/listened_to', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end } = validate(req.query, interval);
 
@@ -117,7 +129,7 @@ router.get("/listened_to", isLoggedOrGuest, async (req, res) => {
   res.status(200).send({ count: 0 });
 });
 
-router.get("/most_listened", isLoggedOrGuest, async (req, res) => {
+router.get('/most_listened', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, timeSplit } = validate(req.query, intervalPerSchema);
 
@@ -125,7 +137,7 @@ router.get("/most_listened", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/most_listened_artist", isLoggedOrGuest, async (req, res) => {
+router.get('/most_listened_artist', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, timeSplit } = validate(req.query, intervalPerSchema);
 
@@ -133,7 +145,7 @@ router.get("/most_listened_artist", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/songs_per", isLoggedOrGuest, async (req, res) => {
+router.get('/songs_per', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, timeSplit } = validate(req.query, intervalPerSchema);
 
@@ -141,7 +153,7 @@ router.get("/songs_per", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/time_per", isLoggedOrGuest, async (req, res) => {
+router.get('/time_per', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, timeSplit } = validate(req.query, intervalPerSchema);
 
@@ -149,7 +161,7 @@ router.get("/time_per", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/album_date_ratio", isLoggedOrGuest, async (req, res) => {
+router.get('/album_date_ratio', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, timeSplit } = validate(req.query, intervalPerSchema);
 
@@ -157,7 +169,7 @@ router.get("/album_date_ratio", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/feat_ratio", isLoggedOrGuest, async (req, res) => {
+router.get('/feat_ratio', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, timeSplit } = validate(req.query, intervalPerSchema);
 
@@ -165,7 +177,7 @@ router.get("/feat_ratio", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/popularity_per", isLoggedOrGuest, async (req, res) => {
+router.get('/popularity_per', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, timeSplit } = validate(req.query, intervalPerSchema);
 
@@ -173,7 +185,7 @@ router.get("/popularity_per", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/different_artists_per", isLoggedOrGuest, async (req, res) => {
+router.get('/different_artists_per', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, timeSplit } = validate(req.query, intervalPerSchema);
 
@@ -181,7 +193,7 @@ router.get("/different_artists_per", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/time_per_hour_of_day", isLoggedOrGuest, async (req, res) => {
+router.get('/time_per_hour_of_day', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end } = validate(req.query, interval);
 
@@ -189,7 +201,7 @@ router.get("/time_per_hour_of_day", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/best_artists_per", isLoggedOrGuest, async (req, res) => {
+router.get('/best_artists_per', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, timeSplit } = validate(req.query, intervalPerSchema);
 
@@ -207,7 +219,7 @@ const intervalPerSchemaNbOffset = z.object({
   offset: z.preprocess(toNumber, z.number().min(0).default(0)),
 });
 
-router.get("/top/songs", isLoggedOrGuest, async (req, res) => {
+router.get('/top/songs', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, nb, offset } = validate(
     req.query,
@@ -218,7 +230,7 @@ router.get("/top/songs", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/top/artists", isLoggedOrGuest, async (req, res) => {
+router.get('/top/artists', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, nb, offset } = validate(
     req.query,
@@ -229,7 +241,7 @@ router.get("/top/artists", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/top/albums", isLoggedOrGuest, async (req, res) => {
+router.get('/top/albums', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end, nb, offset } = validate(
     req.query,
@@ -248,17 +260,17 @@ const collaborativeSchema = intervalPerSchema.merge(
 );
 
 export function normalizeOtherIdsQuery(query: any) {
-  if (query["otherIds[]"]) {
-    query.otherIds = Array.isArray(query["otherIds[]"])
-      ? query["otherIds[]"]
-      : [query["otherIds[]"]];
-    delete query["otherIds[]"];
+  if (query['otherIds[]']) {
+    query.otherIds = Array.isArray(query['otherIds[]'])
+      ? query['otherIds[]']
+      : [query['otherIds[]']];
+    delete query['otherIds[]'];
   }
   return query;
 }
 
 router.get(
-  "/collaborative/top/songs",
+  '/collaborative/top/songs',
   logged,
   affinityAllowed,
   async (req, res) => {
@@ -280,7 +292,7 @@ router.get(
 );
 
 router.get(
-  "/collaborative/top/albums",
+  '/collaborative/top/albums',
   logged,
   affinityAllowed,
   async (req, res) => {
@@ -302,7 +314,7 @@ router.get(
 );
 
 router.get(
-  "/collaborative/top/artists",
+  '/collaborative/top/artists',
   logged,
   affinityAllowed,
   async (req, res) => {
@@ -323,7 +335,7 @@ router.get(
   },
 );
 
-router.get("/top/hour-repartition/songs", isLoggedOrGuest, async (req, res) => {
+router.get('/top/hour-repartition/songs', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end } = validate(req.query, interval);
 
@@ -332,7 +344,7 @@ router.get("/top/hour-repartition/songs", isLoggedOrGuest, async (req, res) => {
 });
 
 router.get(
-  "/top/hour-repartition/albums",
+  '/top/hour-repartition/albums',
   isLoggedOrGuest,
   async (req, res) => {
     const { user } = req as LoggedRequest;
@@ -344,7 +356,7 @@ router.get(
 );
 
 router.get(
-  "/top/hour-repartition/artists",
+  '/top/hour-repartition/artists',
   isLoggedOrGuest,
   async (req, res) => {
     const { user } = req as LoggedRequest;
@@ -355,7 +367,7 @@ router.get(
   },
 );
 
-router.get("/top/sessions", isLoggedOrGuest, async (req, res) => {
+router.get('/top/sessions', isLoggedOrGuest, async (req, res) => {
   const { user } = req as LoggedRequest;
   const { start, end } = validate(req.query, interval);
 
@@ -367,7 +379,7 @@ router.get("/top/sessions", isLoggedOrGuest, async (req, res) => {
   res.status(200).send(result);
 });
 
-router.get("/playlists", logged, withHttpClient, async (req, res) => {
+router.get('/playlists', logged, withHttpClient, async (req, res) => {
   const { client, user } = req as LoggedRequest & SpotifyRequest;
 
   const playlists = await client.playlists();
@@ -379,11 +391,11 @@ router.get("/playlists", logged, withHttpClient, async (req, res) => {
 const createPlaylistBase = z.object({
   playlistId: z.string().optional(),
   name: z.string().optional(),
-  sortKey: z.string().default("count"),
+  sortKey: z.string().default('count'),
 });
 
 const createPlaylistFromTop = z.object({
-  type: z.literal("top"),
+  type: z.literal('top'),
   interval: z.object({
     start: z.preprocess(toDate, z.date()),
     end: z.preprocess(
@@ -395,7 +407,7 @@ const createPlaylistFromTop = z.object({
 });
 
 const createPlaylistFromAffinity = z.object({
-  type: z.literal("affinity"),
+  type: z.literal('affinity'),
   interval: z.object({
     start: z.preprocess(toDate, z.date()),
     end: z.preprocess(
@@ -409,24 +421,24 @@ const createPlaylistFromAffinity = z.object({
 });
 
 const createPlaylistFromSpecific = z.object({
-  type: z.literal("specific"),
+  type: z.literal('specific'),
   songIds: z.array(z.string()),
 });
 
 const createPlaylistFromArtistTop = z.object({
-  type: z.literal("top-artist"),
+  type: z.literal('top-artist'),
   nb: z.number(),
   artistId: z.string(),
 });
 
-const createPlaylist = z.discriminatedUnion("type", [
+const createPlaylist = z.discriminatedUnion('type', [
   createPlaylistBase.merge(createPlaylistFromTop),
   createPlaylistBase.merge(createPlaylistFromSpecific),
   createPlaylistBase.merge(createPlaylistFromAffinity),
   createPlaylistBase.merge(createPlaylistFromArtistTop),
 ]);
 
-router.post("/playlist/create", logged, withHttpClient, async (req, res) => {
+router.post('/playlist/create', logged, withHttpClient, async (req, res) => {
   const { client, user } = req as LoggedRequest & SpotifyRequest;
   const body = validate(req.body, createPlaylist);
 
@@ -437,7 +449,7 @@ router.post("/playlist/create", logged, withHttpClient, async (req, res) => {
 
   let playlistName = body.name;
   let spotifyIds: string[];
-  if (body.type === "top") {
+  if (body.type === 'top') {
     const { interval: intervalData, nb } = body;
     const items = await getBest(
       ItemType.track,
@@ -455,7 +467,7 @@ router.post("/playlist/create", logged, withHttpClient, async (req, res) => {
         intervalData.end,
       )}`;
     }
-  } else if (body.type === "affinity") {
+  } else if (body.type === 'affinity') {
     if (!playlistName) {
       playlistName = `Your Spotify Playlist • ${DateFormatter.toDayMonthYear(user.settings.dateFormat, new Date())}`;
     }
@@ -467,13 +479,13 @@ router.post("/playlist/create", logged, withHttpClient, async (req, res) => {
       body.nb,
     );
     spotifyIds = affinity.map(item => item.track.id);
-  } else if (body.type === "top-artist") {
+  } else if (body.type === 'top-artist') {
     const [artist] = await getArtists([body.artistId]);
     if (!artist) {
       res.status(404).end();
       return;
     }
-    const mostListened = await getMostListenedSongOfArtist(user, artist.id)
+    const mostListened = await getMostListenedSongOfArtist(user, artist.id);
     spotifyIds = mostListened.map(item => item.track.id);
     if (!playlistName) {
       playlistName = `My top of ${artist.id}`;
